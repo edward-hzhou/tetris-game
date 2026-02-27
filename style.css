@@ -115,12 +115,98 @@ button:disabled {
 /* 方块样式 */
 .cell {
     border: 1px solid #333;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
 }
 
-.cell.I { background-color: #00ffff; }
-.cell.J { background-color: #0000ff; }
-.cell.L { background-color: #ff7f00; }
-.cell.O { background-color: #ffff00; }
-.cell.S { background-color: #00ff00; }
-.cell.T { background-color: #800080; }
-.cell.Z { background-color: #ff0000; }
+/* 蛋仔风格方块 */
+.cell.I {
+    background: linear-gradient(135deg, #00ffff, #7fffff);
+}
+
+.cell.J {
+    background: linear-gradient(135deg, #0000ff, #4d4dff);
+}
+
+.cell.L {
+    background: linear-gradient(135deg, #ff7f00, #ffb366);
+}
+
+.cell.O {
+    background: linear-gradient(135deg, #ffff00, #ffff80);
+}
+
+.cell.S {
+    background: linear-gradient(135deg, #00ff00, #80ff80);
+}
+
+.cell.T {
+    background: linear-gradient(135deg, #800080, #b300b3);
+}
+
+.cell.Z {
+    background: linear-gradient(135deg, #ff0000, #ff8080);
+}
+
+/* 蛋仔特征 - 天线 */
+.cell::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 2px;
+}
+
+/* 蛋仔特征 - 眼睛 */
+.cell::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 12px;
+    height: 6px;
+    background-color: rgba(0, 0, 0, 0.6);
+    border-radius: 3px;
+}
+
+/* 不同方块的特殊眼睛 */
+.cell.I::after {
+    width: 14px;
+    height: 7px;
+}
+
+.cell.J::after {
+    width: 10px;
+    height: 5px;
+}
+
+.cell.L::after {
+    width: 11px;
+    height: 6px;
+}
+
+.cell.O::after {
+    width: 13px;
+    height: 7px;
+}
+
+.cell.S::after {
+    width: 10px;
+    height: 5px;
+}
+
+.cell.T::after {
+    width: 12px;
+    height: 6px;
+}
+
+.cell.Z::after {
+    width: 11px;
+    height: 6px;
+}
