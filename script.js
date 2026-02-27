@@ -42,7 +42,6 @@ const TETROMINOS = {
     ]
 };
 
-// 颜色映射
 const COLORS = {
     I: 'I',
     J: 'J',
@@ -53,7 +52,11 @@ const COLORS = {
     Z: 'Z'
 };
 
-// 游戏状态
+// 游戏模式
+let gameMode = 'single';
+let gameRunning = false;
+
+// 单人游戏状态
 let board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
 let currentPiece = null;
 let currentPosition = { x: 0, y: 0 };
@@ -68,6 +71,443 @@ let dropTimer = null;
 let autoPlay = false;
 let autoPlayTimer = null;
 
+// 对战游戏状态
+let playerGame = null;
+let aiGame = null;
+
+// 游戏类
+class TetrisGame {
+    constructor(boardId, nextPieceId, scoreId, levelId, isAI = false) {
+        this.boardElement = document.getElementById(boardId);
+        this.nextPieceElement = document.getElementById(nextPieceId);
+        this.scoreElement = document.getElementById(scoreId);
+        this.levelElement = document.getElementById(levelId);
+        this.isAI = isAI;
+        
+        this.board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+        this.currentPiece = null;
+        this.currentPosition = { x: 0, y: 0 };
+        this.nextPiece = null;
+        this.score = 0;
+        this.level = 1;
+        this.linesCleared = 0;
+        this.gameOver = false;
+        this.dropInterval = 1000;
+        this.dropTimer = null;
+        this.autoPlay = isAI;
+        
+        this.createBoard();
+        this.createNextPieceBoard();
+    }
+    
+    createBoard() {
+        this.boardElement.innerHTML = '';
+        for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.x = x;
+                cell.dataset.y = y;
+                this.boardElement.appendChild(cell);
+            }
+        }
+    }
+    
+    createNextPieceBoard() {
+        const nextPieceBoard = document.createElement('div');
+        nextPieceBoard.id = this.nextPieceElement.id + '-board';
+        nextPieceBoard.style.display = 'grid';
+        nextPieceBoard.style.gridTemplateColumns = 'repeat(4, 1fr)';
+        nextPieceBoard.style.gridTemplateRows = 'repeat(4, 1fr)';
+        nextPieceBoard.style.width = '100%';
+        nextPieceBoard.style.height = '100%';
+        
+        for (let y = 0; y < 4; y++) {
+            for (let x = 0; x < 4; x++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                cell.dataset.x = x;
+                cell.dataset.y = y;
+                nextPieceBoard.appendChild(cell);
+            }
+        }
+        
+        this.nextPieceElement.innerHTML = this.isAI ? 'AI下一个:' : '下一个:';
+        this.nextPieceElement.appendChild(nextPieceBoard);
+    }
+    
+    reset() {
+        this.board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+        this.score = 0;
+        this.level = 1;
+        this.linesCleared = 0;
+        this.gameOver = false;
+        this.dropInterval = 1000;
+        
+        if (this.dropTimer) clearInterval(this.dropTimer);
+        
+        this.updateScore();
+        this.updateLevel();
+        
+        this.currentPiece = this.generateRandomPiece();
+        this.currentPosition = { x: Math.floor(COLS / 2) - Math.floor(this.currentPiece.shape[0].length / 2), y: 0 };
+        this.nextPiece = this.generateRandomPiece();
+        
+        this.drawBoard();
+        this.drawNextPiece();
+    }
+    
+    generateRandomPiece() {
+        const keys = Object.keys(TETROMINOS);
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+        return {
+            shape: TETROMINOS[randomKey],
+            color: COLORS[randomKey]
+        };
+    }
+    
+    drawBoard() {
+        const cells = this.boardElement.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            const x = parseInt(cell.dataset.x);
+            const y = parseInt(cell.dataset.y);
+            cell.className = 'cell';
+            cell.innerHTML = '';
+            if (this.board[y][x]) {
+                cell.classList.add(this.board[y][x]);
+                this.addEggFeatures(cell);
+            }
+        });
+        
+        if (this.currentPiece) {
+            for (let y = 0; y < this.currentPiece.shape.length; y++) {
+                for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
+                    if (this.currentPiece.shape[y][x]) {
+                        const boardX = this.currentPosition.x + x;
+                        const boardY = this.currentPosition.y + y;
+                        if (boardY >= 0 && boardY < ROWS && boardX >= 0 && boardX < COLS) {
+                            const cellIndex = boardY * COLS + boardX;
+                            if (cells[cellIndex]) {
+                                cells[cellIndex].className = 'cell';
+                                cells[cellIndex].classList.add(this.currentPiece.color);
+                                cells[cellIndex].innerHTML = '';
+                                this.addEggFeatures(cells[cellIndex]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    addEggFeatures(cell) {
+        const antenna = document.createElement('div');
+        antenna.className = 'antenna';
+        cell.appendChild(antenna);
+        
+        const eyeLeft = document.createElement('div');
+        eyeLeft.className = 'eye-left';
+        cell.appendChild(eyeLeft);
+        
+        const eyeRight = document.createElement('div');
+        eyeRight.className = 'eye-right';
+        cell.appendChild(eyeRight);
+        
+        const cheekLeft = document.createElement('div');
+        cheekLeft.className = 'cheek-left';
+        cell.appendChild(cheekLeft);
+        
+        const cheekRight = document.createElement('div');
+        cheekRight.className = 'cheek-right';
+        cell.appendChild(cheekRight);
+        
+        const mouth = document.createElement('div');
+        mouth.className = 'mouth';
+        cell.appendChild(mouth);
+    }
+    
+    drawNextPiece() {
+        const nextPieceBoard = document.getElementById(this.nextPieceElement.id + '-board');
+        if (!nextPieceBoard) return;
+        
+        const cells = nextPieceBoard.querySelectorAll('.cell');
+        cells.forEach(cell => {
+            cell.className = 'cell';
+            cell.innerHTML = '';
+        });
+        
+        if (this.nextPiece) {
+            for (let y = 0; y < this.nextPiece.shape.length; y++) {
+                for (let x = 0; x < this.nextPiece.shape[y].length; x++) {
+                    if (this.nextPiece.shape[y][x]) {
+                        const cellIndex = y * 4 + x;
+                        if (cells[cellIndex]) {
+                            cells[cellIndex].className = 'cell';
+                            cells[cellIndex].classList.add(this.nextPiece.color);
+                            cells[cellIndex].innerHTML = '';
+                            this.addEggFeatures(cells[cellIndex]);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    checkCollision(piece, position) {
+        for (let y = 0; y < piece.shape.length; y++) {
+            for (let x = 0; x < piece.shape[y].length; x++) {
+                if (piece.shape[y][x]) {
+                    const boardX = position.x + x;
+                    const boardY = position.y + y;
+                    if (boardY < 0) continue;
+                    if (boardY >= ROWS || boardX < 0 || boardX >= COLS || this.board[boardY][boardX]) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    rotatePiece(piece) {
+        const rotated = piece.shape[0].map((_, index) => 
+            piece.shape.map(row => row[index]).reverse()
+        );
+        return { ...piece, shape: rotated };
+    }
+    
+    movePiece(dx, dy) {
+        const newPosition = { x: this.currentPosition.x + dx, y: this.currentPosition.y + dy };
+        if (!this.checkCollision(this.currentPiece, newPosition)) {
+            this.currentPosition = newPosition;
+            this.drawBoard();
+            return true;
+        }
+        return false;
+    }
+    
+    lockPiece() {
+        for (let y = 0; y < this.currentPiece.shape.length; y++) {
+            for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
+                if (this.currentPiece.shape[y][x]) {
+                    const boardX = this.currentPosition.x + x;
+                    const boardY = this.currentPosition.y + y;
+                    if (boardY >= 0) {
+                        this.board[boardY][boardX] = this.currentPiece.color;
+                    }
+                }
+            }
+        }
+        
+        this.checkLines();
+        
+        this.currentPiece = this.nextPiece;
+        this.currentPosition = { x: Math.floor(COLS / 2) - Math.floor(this.currentPiece.shape[0].length / 2), y: 0 };
+        this.nextPiece = this.generateRandomPiece();
+        
+        if (this.checkCollision(this.currentPiece, this.currentPosition)) {
+            this.gameOver = true;
+            if (this.dropTimer) clearInterval(this.dropTimer);
+            if (gameMode === 'battle') {
+                checkBattleEnd();
+            }
+        }
+        
+        this.drawBoard();
+        this.drawNextPiece();
+    }
+    
+    checkLines() {
+        let linesRemoved = 0;
+        for (let y = ROWS - 1; y >= 0; y--) {
+            if (this.board[y].every(cell => cell)) {
+                this.board.splice(y, 1);
+                this.board.unshift(Array(COLS).fill(0));
+                linesRemoved++;
+                y++;
+            }
+        }
+        
+        if (linesRemoved > 0) {
+            const linePoints = [0, 100, 300, 500, 800];
+            this.score += linePoints[linesRemoved] * this.level;
+            this.linesCleared += linesRemoved;
+            
+            if (this.linesCleared >= this.level * 10) {
+                this.level++;
+                this.dropInterval = Math.max(100, this.dropInterval - 100);
+                this.updateLevel();
+            }
+            
+            this.updateScore();
+        }
+    }
+    
+    updateScore() {
+        if (this.scoreElement) {
+            this.scoreElement.textContent = this.score;
+        }
+    }
+    
+    updateLevel() {
+        if (this.levelElement) {
+            this.levelElement.textContent = this.level;
+        }
+    }
+    
+    dropPiece() {
+        if (!this.movePiece(0, 1)) {
+            this.lockPiece();
+        }
+    }
+    
+    start() {
+        this.gameOver = false;
+        this.reset();
+        if (this.dropTimer) clearInterval(this.dropTimer);
+        this.dropTimer = setInterval(() => this.dropPiece(), this.dropInterval);
+        
+        if (this.isAI) {
+            this.startAutoPlay();
+        }
+    }
+    
+    startAutoPlay() {
+        if (this.dropTimer) clearInterval(this.dropTimer);
+        this.dropTimer = setInterval(() => this.dropPiece(), this.dropInterval);
+        
+        const autoTimer = setInterval(() => {
+            if (this.gameOver) {
+                clearInterval(autoTimer);
+                return;
+            }
+            
+            const bestMove = this.findBestMove();
+            
+            if (bestMove.rotations > 0) {
+                for (let i = 0; i < bestMove.rotations; i++) {
+                    const rotatedPiece = this.rotatePiece(this.currentPiece);
+                    if (!this.checkCollision(rotatedPiece, this.currentPosition)) {
+                        this.currentPiece = rotatedPiece;
+                        this.drawBoard();
+                    }
+                }
+            }
+            
+            const targetX = bestMove.x - this.currentPosition.x;
+            if (targetX > 0) {
+                for (let i = 0; i < targetX; i++) {
+                    this.movePiece(1, 0);
+                }
+            } else if (targetX < 0) {
+                for (let i = 0; i < Math.abs(targetX); i++) {
+                    this.movePiece(-1, 0);
+                }
+            }
+        }, 100);
+    }
+    
+    findBestMove() {
+        let bestScore = -Infinity;
+        let bestMove = { x: this.currentPosition.x, rotations: 0 };
+        
+        const piece = this.currentPiece;
+        
+        for (let rotations = 0; rotations < 4; rotations++) {
+            const rotatedPiece = { ...piece, shape: this.getRotatedShape(piece.shape, rotations) };
+            
+            for (let x = -2; x < COLS + 2; x++) {
+                const position = { x: x, y: this.currentPosition.y };
+                
+                if (!this.checkCollision(rotatedPiece, position)) {
+                    const landingY = this.getLandingPosition(rotatedPiece, position);
+                    const score = this.evaluatePosition(rotatedPiece, { x: x, y: landingY });
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove = { x: x, rotations: rotations };
+                    }
+                }
+            }
+        }
+        
+        return bestMove;
+    }
+    
+    getRotatedShape(shape, times) {
+        let result = shape;
+        for (let i = 0; i < times; i++) {
+            result = result[0].map((_, index) => 
+                result.map(row => row[index]).reverse()
+            );
+        }
+        return result;
+    }
+    
+    getLandingPosition(piece, position) {
+        let y = position.y;
+        while (!this.checkCollision(piece, { x: position.x, y: y + 1 })) {
+            y++;
+        }
+        return y;
+    }
+    
+    evaluatePosition(piece, position) {
+        let score = 0;
+        
+        const testBoard = this.board.map(row => [...row]);
+        for (let y = 0; y < piece.shape.length; y++) {
+            for (let x = 0; x < piece.shape[y].length; x++) {
+                if (piece.shape[y][x]) {
+                    const boardX = position.x + x;
+                    const boardY = position.y + y;
+                    if (boardY >= 0 && boardY < ROWS && boardX >= 0 && boardX < COLS) {
+                        testBoard[boardY][boardX] = piece.color;
+                    }
+                }
+            }
+        }
+        
+        let linesCleared = 0;
+        for (let y = ROWS - 1; y >= 0; y--) {
+            if (testBoard[y].every(cell => cell !== 0)) {
+                linesCleared++;
+            }
+        }
+        score += linesCleared * 1000;
+        
+        let maxHeight = 0;
+        for (let x = 0; x < COLS; x++) {
+            for (let y = 0; y < ROWS; y++) {
+                if (testBoard[y][x]) {
+                    maxHeight = Math.max(maxHeight, ROWS - y);
+                    break;
+                }
+            }
+        }
+        score -= maxHeight * 10;
+        
+        let holes = 0;
+        for (let x = 0; x < COLS; x++) {
+            let foundBlock = false;
+            for (let y = 0; y < ROWS; y++) {
+                if (testBoard[y][x]) {
+                    foundBlock = true;
+                } else if (foundBlock && !testBoard[y][x]) {
+                    holes++;
+                }
+            }
+        }
+        score -= holes * 50;
+        
+        const pieceCenterX = position.x + piece.shape[0].length / 2;
+        const boardCenterX = COLS / 2;
+        score -= Math.abs(pieceCenterX - boardCenterX) * 2;
+        
+        return score;
+    }
+}
+
 // DOM 元素
 const boardElement = document.getElementById('tetris-board');
 const nextPieceElement = document.getElementById('next-piece');
@@ -77,6 +517,10 @@ const startButton = document.getElementById('start-button');
 const pauseButton = document.getElementById('pause-button');
 const resetButton = document.getElementById('reset-button');
 const autoButton = document.getElementById('auto-button');
+const singleBtn = document.getElementById('single-btn');
+const battleBtn = document.getElementById('battle-btn');
+const singleMode = document.getElementById('single-mode');
+const battleMode = document.getElementById('battle-mode');
 
 // 初始化游戏
 function initGame() {
@@ -84,6 +528,7 @@ function initGame() {
     createNextPieceBoard();
     resetGame();
     setupEventListeners();
+    setupModeSelect();
 }
 
 // 创建游戏板
@@ -134,6 +579,10 @@ function resetGame() {
     gamePaused = false;
     dropInterval = 1000;
     
+    if (dropTimer) clearInterval(dropTimer);
+    if (autoPlayTimer) clearInterval(autoPlayTimer);
+    autoPlay = false;
+    
     updateScore();
     updateLevel();
     
@@ -143,10 +592,6 @@ function resetGame() {
     
     drawBoard();
     drawNextPiece();
-    
-    if (dropTimer) clearInterval(dropTimer);
-    if (autoPlayTimer) clearInterval(autoPlayTimer);
-    autoPlay = false;
     
     startButton.disabled = false;
     pauseButton.disabled = true;
@@ -178,7 +623,6 @@ function drawBoard() {
         }
     });
     
-    // 绘制当前方块
     if (currentPiece) {
         for (let y = 0; y < currentPiece.shape.length; y++) {
             for (let x = 0; x < currentPiece.shape[y].length; x++) {
@@ -230,6 +674,8 @@ function addEggFeatures(cell) {
 // 绘制下一个方块
 function drawNextPiece() {
     const nextPieceBoard = document.getElementById('next-piece-board');
+    if (!nextPieceBoard) return;
+    
     const cells = nextPieceBoard.querySelectorAll('.cell');
     cells.forEach(cell => {
         cell.className = 'cell';
@@ -303,15 +749,12 @@ function lockPiece() {
         }
     }
     
-    // 检查是否有完整的行
     checkLines();
     
-    // 生成新方块
     currentPiece = nextPiece;
     currentPosition = { x: Math.floor(COLS / 2) - Math.floor(currentPiece.shape[0].length / 2), y: 0 };
     nextPiece = generateRandomPiece();
     
-    // 检查游戏是否结束
     if (checkCollision(currentPiece, currentPosition)) {
         gameOver = true;
         clearInterval(dropTimer);
@@ -340,12 +783,10 @@ function checkLines() {
     }
     
     if (linesRemoved > 0) {
-        // 计算分数
         const linePoints = [0, 100, 300, 500, 800];
         score += linePoints[linesRemoved] * level;
         linesCleared += linesRemoved;
         
-        // 检查是否升级
         if (linesCleared >= level * 10) {
             level++;
             dropInterval = Math.max(100, dropInterval - 100);
@@ -383,44 +824,129 @@ function updateLevel() {
     levelElement.textContent = level;
 }
 
+// 设置模式选择
+function setupModeSelect() {
+    singleBtn.addEventListener('click', () => {
+        gameMode = 'single';
+        singleBtn.classList.add('active');
+        battleBtn.classList.remove('active');
+        singleMode.classList.remove('hidden');
+        battleMode.classList.add('hidden');
+        resetGame();
+    });
+    
+    battleBtn.addEventListener('click', () => {
+        gameMode = 'battle';
+        battleBtn.classList.add('active');
+        singleBtn.classList.remove('active');
+        singleMode.classList.add('hidden');
+        battleMode.classList.remove('hidden');
+        initBattleGame();
+    });
+}
+
+// 初始化对战游戏
+function initBattleGame() {
+    playerGame = new TetrisGame('player-board', 'player-next', 'player-score', 'player-level', false);
+    aiGame = new TetrisGame('ai-board', 'ai-next', 'ai-score', 'ai-level', true);
+    
+    playerGame.reset();
+    aiGame.reset();
+}
+
+// 检查对战结束
+function checkBattleEnd() {
+    if (playerGame && aiGame) {
+        if (playerGame.gameOver) {
+            alert('AI获胜！');
+        } else if (aiGame.gameOver) {
+            alert('玩家获胜！');
+        }
+    }
+}
+
 // 设置事件监听器
 function setupEventListeners() {
-    // 键盘控制
     document.addEventListener('keydown', (e) => {
-        if (gameOver || gamePaused) return;
-        
-        switch (e.key) {
-            case 'ArrowLeft':
-                movePiece(-1, 0);
-                break;
-            case 'ArrowRight':
-                movePiece(1, 0);
-                break;
-            case 'ArrowDown':
-                movePiece(0, 1);
-                break;
-            case 'ArrowUp':
-                const rotatedPiece = rotatePiece(currentPiece);
-                if (!checkCollision(rotatedPiece, currentPosition)) {
-                    currentPiece = rotatedPiece;
-                    drawBoard();
-                }
-                break;
-            case ' ': // 空格键
-                hardDrop();
-                break;
+        if (gameMode === 'battle') {
+            handleBattleControls(e);
+        } else {
+            handleSingleControls(e);
         }
     });
     
-    // 按钮控制
     startButton.addEventListener('click', startGame);
     autoButton.addEventListener('click', toggleAutoPlay);
     pauseButton.addEventListener('click', togglePause);
     resetButton.addEventListener('click', resetGame);
 }
 
+// 单人模式控制
+function handleSingleControls(e) {
+    if (gameOver || gamePaused) return;
+    
+    switch (e.key) {
+        case 'ArrowLeft':
+            movePiece(-1, 0);
+            break;
+        case 'ArrowRight':
+            movePiece(1, 0);
+            break;
+        case 'ArrowDown':
+            movePiece(0, 1);
+            break;
+        case 'ArrowUp':
+            const rotatedPiece = rotatePiece(currentPiece);
+            if (!checkCollision(rotatedPiece, currentPosition)) {
+                currentPiece = rotatedPiece;
+                drawBoard();
+            }
+            break;
+        case ' ':
+            hardDrop();
+            break;
+    }
+}
+
+// 对战模式控制
+function handleBattleControls(e) {
+    if (!playerGame || playerGame.gameOver || gamePaused) return;
+    
+    switch (e.key) {
+        case 'ArrowLeft':
+            playerGame.movePiece(-1, 0);
+            break;
+        case 'ArrowRight':
+            playerGame.movePiece(1, 0);
+            break;
+        case 'ArrowDown':
+            playerGame.movePiece(0, 1);
+            break;
+        case 'ArrowUp':
+            const rotatedPiece = playerGame.rotatePiece(playerGame.currentPiece);
+            if (!playerGame.checkCollision(rotatedPiece, playerGame.currentPosition)) {
+                playerGame.currentPiece = rotatedPiece;
+                playerGame.drawBoard();
+            }
+            break;
+        case ' ':
+            while (playerGame.movePiece(0, 1));
+            playerGame.lockPiece();
+            break;
+    }
+}
+
 // 开始游戏
 function startGame() {
+    if (gameMode === 'battle') {
+        startBattleGame();
+    } else {
+        startSingleGame();
+    }
+}
+
+// 开始单人游戏
+function startSingleGame() {
     if (gameOver) {
         resetGame();
     }
@@ -434,17 +960,43 @@ function startGame() {
     dropTimer = setInterval(dropPiece, dropInterval);
 }
 
+// 开始对战游戏
+function startBattleGame() {
+    if (!playerGame || !aiGame) {
+        initBattleGame();
+    }
+    
+    gamePaused = false;
+    startButton.disabled = true;
+    pauseButton.disabled = false;
+    autoButton.disabled = true;
+    
+    playerGame.start();
+    aiGame.start();
+}
+
 // 暂停/继续游戏
 function togglePause() {
     gamePaused = !gamePaused;
     if (gamePaused) {
         clearInterval(dropTimer);
         clearInterval(autoPlayTimer);
+        if (playerGame && playerGame.dropTimer) clearInterval(playerGame.dropTimer);
+        if (aiGame && aiGame.dropTimer) clearInterval(aiGame.dropTimer);
         pauseButton.textContent = '继续';
     } else {
-        dropTimer = setInterval(dropPiece, dropInterval);
-        if (autoPlay) {
-            startAutoPlay();
+        if (gameMode === 'battle') {
+            if (playerGame && !playerGame.gameOver) {
+                playerGame.dropTimer = setInterval(() => playerGame.dropPiece(), playerGame.dropInterval);
+            }
+            if (aiGame && !aiGame.gameOver) {
+                aiGame.startAutoPlay();
+            }
+        } else {
+            dropTimer = setInterval(dropPiece, dropInterval);
+            if (autoPlay) {
+                startAutoPlay();
+            }
         }
         pauseButton.textContent = '暂停';
     }
@@ -452,7 +1004,7 @@ function togglePause() {
 
 // 自动游戏
 function toggleAutoPlay() {
-    if (gameOver) return;
+    if (gameOver || gameMode === 'battle') return;
     
     autoPlay = !autoPlay;
     
@@ -566,7 +1118,6 @@ function getLandingPosition(piece, position) {
 function evaluatePosition(piece, position) {
     let score = 0;
     
-    // 消除行数评估
     const testBoard = board.map(row => [...row]);
     for (let y = 0; y < piece.shape.length; y++) {
         for (let x = 0; x < piece.shape[y].length; x++) {
@@ -588,7 +1139,6 @@ function evaluatePosition(piece, position) {
     }
     score += linesCleared * 1000;
     
-    // 惩罚堆叠高度
     let maxHeight = 0;
     for (let x = 0; x < COLS; x++) {
         for (let y = 0; y < ROWS; y++) {
@@ -600,7 +1150,6 @@ function evaluatePosition(piece, position) {
     }
     score -= maxHeight * 10;
     
-    // 惩罚空洞
     let holes = 0;
     for (let x = 0; x < COLS; x++) {
         let foundBlock = false;
@@ -614,7 +1163,6 @@ function evaluatePosition(piece, position) {
     }
     score -= holes * 50;
     
-    // 奖励中心对齐
     const pieceCenterX = position.x + piece.shape[0].length / 2;
     const boardCenterX = COLS / 2;
     score -= Math.abs(pieceCenterX - boardCenterX) * 2;

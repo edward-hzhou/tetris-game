@@ -3,37 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>俄罗斯方块</title>
+    <title>俄罗斯方块对战版</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* 确保页面内容可见 */
         body {
             display: block;
             min-height: 100vh;
             padding: 20px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         }
         .tetris-container {
             margin: 0 auto;
+        }
+        .game-title {
+            font-size: 36px;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+        .mode-select {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .mode-select button {
+            margin: 0 10px;
+            padding: 12px 24px;
+            font-size: 16px;
+        }
+        .mode-select button.active {
+            background-color: #ff6b6b;
+            box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+        }
+        .battle-area {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            flex-wrap: wrap;
+        }
+        .player-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .player-section h2 {
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        .player-section.player h2 {
+            color: #4ade80;
+        }
+        .player-section.ai h2 {
+            color: #f87171;
+        }
+        .player-section .tetris-board {
+            width: 250px;
+            height: 500px;
+        }
+        .player-section .next-piece {
+            width: 100px;
+            height: 100px;
+        }
+        .player-section .game-info {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .vs-text {
+            display: flex;
+            align-items: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: #ff6b6b;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+        }
+        .hidden {
+            display: none !important;
         }
     </style>
 </head>
 <body>
     <div class="tetris-container">
-        <h1>俄罗斯方块</h1>
-        <div class="game-info">
-            <div class="score">分数: <span id="score">0</span></div>
-            <div class="level">级别: <span id="level">1</span></div>
+        <h1 class="game-title">俄罗斯方块</h1>
+        
+        <div class="mode-select" id="mode-select">
+            <button id="single-btn" class="active">单人模式</button>
+            <button id="battle-btn">对战模式</button>
         </div>
-        <div class="game-area">
-            <div class="tetris-board" id="tetris-board"></div>
-            <div class="next-piece" id="next-piece">下一个:</div>
+        
+        <div id="single-mode">
+            <div class="game-info" style="text-align: center; color: #333; margin-bottom: 20px;">
+                <div class="score" style="display: inline-block; margin: 0 20px;">分数: <span id="score">0</span></div>
+                <div class="level" style="display: inline-block; margin: 0 20px;">级别: <span id="level">1</span></div>
+            </div>
+            <div class="game-area" style="display: flex; justify-content: center;">
+                <div class="tetris-board" id="tetris-board"></div>
+                <div class="next-piece" id="next-piece">下一个:</div>
+            </div>
         </div>
-        <div class="controls">
+        
+        <div id="battle-mode" class="hidden">
+            <div class="battle-area">
+                <div class="player-section player">
+                    <h2>👤 玩家</h2>
+                    <div class="game-info">
+                        <div>分数: <span id="player-score">0</span></div>
+                        <div>等级: <span id="player-level">1</span></div>
+                    </div>
+                    <div class="tetris-board" id="player-board"></div>
+                    <div class="next-piece" id="player-next">下一个:</div>
+                </div>
+                
+                <div class="vs-text">VS</div>
+                
+                <div class="player-section ai">
+                    <h2>🤖 AI</h2>
+                    <div class="game-info">
+                        <div>分数: <span id="ai-score">0</span></div>
+                        <div>等级: <span id="ai-level">1</span></div>
+                    </div>
+                    <div class="tetris-board" id="ai-board"></div>
+                    <div class="next-piece" id="ai-next">下一个:</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls" id="game-controls">
             <button id="start-button">开始游戏</button>
             <button id="auto-button">自动游戏</button>
             <button id="pause-button">暂停</button>
             <button id="reset-button">重置</button>
         </div>
+        
         <div class="instructions">
             <h3>操作说明:</h3>
             <ul>
@@ -46,13 +151,8 @@
         </div>
     </div>
     <script>
-        // 添加错误处理
         window.onerror = function(message, source, lineno, colno, error) {
             console.error('Error:', message);
-            console.error('Source:', source);
-            console.error('Line:', lineno);
-            console.error('Column:', colno);
-            console.error('Error object:', error);
         };
     </script>
     <script src="script.js"></script>
