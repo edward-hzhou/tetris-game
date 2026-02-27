@@ -114,99 +114,169 @@ button:disabled {
 
 /* 方块样式 */
 .cell {
-    border: 1px solid #333;
+    border: 1px solid #222;
     position: relative;
     overflow: hidden;
-    border-radius: 8px;
+    border-radius: 10px;
 }
 
-/* 蛋仔风格方块 */
-.cell.I {
-    background: linear-gradient(135deg, #00ffff, #7fffff);
-}
-
-.cell.J {
-    background: linear-gradient(135deg, #0000ff, #4d4dff);
-}
-
-.cell.L {
-    background: linear-gradient(135deg, #ff7f00, #ffb366);
-}
-
-.cell.O {
-    background: linear-gradient(135deg, #ffff00, #ffff80);
-}
-
-.cell.S {
-    background: linear-gradient(135deg, #00ff00, #80ff80);
-}
-
-.cell.T {
-    background: linear-gradient(135deg, #800080, #b300b3);
-}
-
-.cell.Z {
-    background: linear-gradient(135deg, #ff0000, #ff8080);
-}
-
-/* 蛋仔特征 - 天线 */
+/* 蛋仔身体 - 基础样式 */
 .cell::before {
     content: '';
     position: absolute;
-    top: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 3px;
-    height: 8px;
-    background-color: rgba(255, 255, 255, 0.8);
-    border-radius: 2px;
+    top: 2px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+    border-radius: 8px;
 }
 
-/* 蛋仔特征 - 眼睛 */
-.cell::after {
+/* I型 - 青色蛋仔 */
+.cell.I::before {
+    background: linear-gradient(180deg, #5EEADC 0%, #2DD4BF 50%, #14B8A6 100%);
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 3px 6px rgba(255,255,255,0.4);
+}
+.cell.I { background: #0D9488; }
+
+/* J型 - 蓝色蛋仔 */
+.cell.J::before {
+    background: linear-gradient(180deg, #60A5FA 0%, #3B82F6 50%, #2563EB 100%);
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 3px 6px rgba(255,255,255,0.4);
+}
+.cell.J { background: #1D4ED8; }
+
+/* L型 - 橙色蛋仔 */
+.cell.L::before {
+    background: linear-gradient(180deg, #FB923C 0%, #F97316 50%, #EA580C 100%);
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 3px 6px rgba(255,255,255,0.4);
+}
+.cell.L { background: #C2410C; }
+
+/* O型 - 黄色蛋仔 */
+.cell.O::before {
+    background: linear-gradient(180deg, #FDE047 0%, #FACC15 50%, #EAB308 100%);
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.1), inset 0 3px 6px rgba(255,255,255,0.5);
+}
+.cell.O { background: #CA8A04; }
+
+/* S型 - 绿色蛋仔 */
+.cell.S::before {
+    background: linear-gradient(180deg, #86EFAC 0%, #4ADE80 50%, #22C55E 100%);
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 3px 6px rgba(255,255,255,0.4);
+}
+.cell.S { background: #16A34A; }
+
+/* T型 - 紫色蛋仔 */
+.cell.T::before {
+    background: linear-gradient(180deg, #C084FC 0%, #A855F7 50%, #9333EA 100%);
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 3px 6px rgba(255,255,255,0.4);
+}
+.cell.T { background: #7E21CA; }
+
+/* Z型 - 红色蛋仔 */
+.cell.Z::before {
+    background: linear-gradient(180deg, #FCA5A5 0%, #F87171 50%, #EF4444 100%);
+    box-shadow: inset 0 -3px 6px rgba(0,0,0,0.15), inset 0 3px 6px rgba(255,255,255,0.4);
+}
+.cell.Z { background: #DC2626; }
+
+/* 蛋仔眼睛 - 左眼 */
+.cell .eye-left {
+    position: absolute;
+    top: 35%;
+    left: 25%;
+    width: 35%;
+    height: 35%;
+    background: #000;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+/* 蛋仔眼睛 - 右眼 */
+.cell .eye-right {
+    position: absolute;
+    top: 35%;
+    right: 25%;
+    width: 35%;
+    height: 35%;
+    background: #000;
+    border-radius: 50%;
+    z-index: 2;
+}
+
+/* 眼睛高光 */
+.cell .eye-left::before,
+.cell .eye-right::before {
     content: '';
     position: absolute;
-    top: 50%;
+    top: 20%;
+    left: 20%;
+    width: 30%;
+    height: 30%;
+    background: #fff;
+    border-radius: 50%;
+}
+
+/* 蛋仔脸颊 - 左边 */
+.cell .cheek-left {
+    position: absolute;
+    bottom: 25%;
+    left: 10%;
+    width: 25%;
+    height: 20%;
+    background: rgba(255, 150, 150, 0.6);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* 蛋仔脸颊 - 右边 */
+.cell .cheek-right {
+    position: absolute;
+    bottom: 25%;
+    right: 10%;
+    width: 25%;
+    height: 20%;
+    background: rgba(255, 150, 150, 0.6);
+    border-radius: 50%;
+    z-index: 1;
+}
+
+/* 蛋仔嘴巴 */
+.cell .mouth {
+    position: absolute;
+    bottom: 15%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    width: 12px;
-    height: 6px;
-    background-color: rgba(0, 0, 0, 0.6);
-    border-radius: 3px;
+    transform: translateX(-50%);
+    width: 20%;
+    height: 10%;
+    border-bottom: 2px solid rgba(0,0,0,0.4);
+    border-radius: 0 0 50% 50%;
+    z-index: 2;
 }
 
-/* 不同方块的特殊眼睛 */
-.cell.I::after {
-    width: 14px;
-    height: 7px;
+/* 蛋仔天线 */
+.cell .antenna {
+    position: absolute;
+    top: -2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 10px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 2px;
+    z-index: 3;
 }
 
-.cell.J::after {
-    width: 10px;
-    height: 5px;
-}
-
-.cell.L::after {
-    width: 11px;
-    height: 6px;
-}
-
-.cell.O::after {
-    width: 13px;
-    height: 7px;
-}
-
-.cell.S::after {
-    width: 10px;
-    height: 5px;
-}
-
-.cell.T::after {
-    width: 12px;
-    height: 6px;
-}
-
-.cell.Z::after {
-    width: 11px;
-    height: 6px;
+/* 天线顶端的小球 */
+.cell .antenna::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.2);
 }

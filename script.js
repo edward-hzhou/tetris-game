@@ -165,8 +165,10 @@ function drawBoard() {
         const x = parseInt(cell.dataset.x);
         const y = parseInt(cell.dataset.y);
         cell.className = 'cell';
+        cell.innerHTML = '';
         if (board[y][x]) {
             cell.classList.add(board[y][x]);
+            addEggFeatures(cell);
         }
     });
     
@@ -182,6 +184,8 @@ function drawBoard() {
                         if (cells[cellIndex]) {
                             cells[cellIndex].className = 'cell';
                             cells[cellIndex].classList.add(currentPiece.color);
+                            cells[cellIndex].innerHTML = '';
+                            addEggFeatures(cells[cellIndex]);
                         }
                     }
                 }
@@ -190,12 +194,40 @@ function drawBoard() {
     }
 }
 
+// 添加蛋仔特征
+function addEggFeatures(cell) {
+    const antenna = document.createElement('div');
+    antenna.className = 'antenna';
+    cell.appendChild(antenna);
+    
+    const eyeLeft = document.createElement('div');
+    eyeLeft.className = 'eye-left';
+    cell.appendChild(eyeLeft);
+    
+    const eyeRight = document.createElement('div');
+    eyeRight.className = 'eye-right';
+    cell.appendChild(eyeRight);
+    
+    const cheekLeft = document.createElement('div');
+    cheekLeft.className = 'cheek-left';
+    cell.appendChild(cheekLeft);
+    
+    const cheekRight = document.createElement('div');
+    cheekRight.className = 'cheek-right';
+    cell.appendChild(cheekRight);
+    
+    const mouth = document.createElement('div');
+    mouth.className = 'mouth';
+    cell.appendChild(mouth);
+}
+
 // 绘制下一个方块
 function drawNextPiece() {
     const nextPieceBoard = document.getElementById('next-piece-board');
     const cells = nextPieceBoard.querySelectorAll('.cell');
     cells.forEach(cell => {
         cell.className = 'cell';
+        cell.innerHTML = '';
     });
     
     if (nextPiece) {
@@ -206,6 +238,8 @@ function drawNextPiece() {
                     if (cells[cellIndex]) {
                         cells[cellIndex].className = 'cell';
                         cells[cellIndex].classList.add(nextPiece.color);
+                        cells[cellIndex].innerHTML = '';
+                        addEggFeatures(cells[cellIndex]);
                     }
                 }
             }
