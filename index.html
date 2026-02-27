@@ -9,14 +9,15 @@
         body {
             display: block;
             min-height: 100vh;
-            padding: 20px;
+            padding: 10px;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         }
         .tetris-container {
             margin: 0 auto;
+            max-width: 100%;
         }
         .game-title {
-            font-size: 36px;
+            font-size: 28px;
             margin-bottom: 10px;
             background: linear-gradient(90deg, #00ffff, #ff00ff);
             -webkit-background-clip: text;
@@ -25,12 +26,12 @@
         }
         .mode-select {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .mode-select button {
-            margin: 0 10px;
-            padding: 12px 24px;
-            font-size: 16px;
+            margin: 0 5px;
+            padding: 8px 16px;
+            font-size: 14px;
         }
         .mode-select button.active {
             background-color: #ff6b6b;
@@ -39,7 +40,8 @@
         .battle-area {
             display: flex;
             justify-content: center;
-            gap: 50px;
+            align-items: flex-start;
+            gap: 15px;
             flex-wrap: wrap;
         }
         .player-section {
@@ -49,8 +51,8 @@
         }
         .player-section h2 {
             color: #fff;
-            margin-bottom: 10px;
-            font-size: 24px;
+            margin-bottom: 8px;
+            font-size: 18px;
         }
         .player-section.player h2 {
             color: #4ade80;
@@ -59,30 +61,126 @@
             color: #f87171;
         }
         .player-section .tetris-board {
-            width: 250px;
-            height: 500px;
+            width: 180px;
+            height: 360px;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(20, 1fr);
         }
         .player-section .next-piece {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
         }
         .player-section .game-info {
             background: rgba(255,255,255,0.1);
-            padding: 10px 20px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
             color: #fff;
+            font-size: 12px;
         }
         .vs-text {
             display: flex;
             align-items: center;
-            font-size: 48px;
+            font-size: 24px;
             font-weight: bold;
             color: #ff6b6b;
-            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+            padding-top: 50px;
         }
         .hidden {
             display: none !important;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .controls button {
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+        .instructions {
+            font-size: 12px;
+            padding: 10px;
+        }
+        .instructions h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        .instructions ul {
+            padding-left: 15px;
+        }
+        .instructions li {
+            margin-bottom: 3px;
+        }
+        
+        #single-mode .game-area {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        #single-mode .tetris-board {
+            width: 250px;
+            height: 500px;
+            border: 2px solid #333;
+            background-color: #000;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(20, 1fr);
+        }
+        
+        #single-mode .next-piece {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #333;
+            background-color: #000;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+        }
+        
+        @media (max-width: 600px) {
+            #single-mode .tetris-board {
+                width: 180px;
+                height: 360px;
+            }
+            #single-mode .next-piece {
+                width: 70px;
+                height: 70px;
+            }
+        }
+        
+        @media (max-width: 500px) {
+            .game-title {
+                font-size: 22px;
+            }
+            .player-section .tetris-board {
+                width: 150px;
+                height: 300px;
+            }
+            .player-section .next-piece {
+                width: 60px;
+                height: 60px;
+            }
+            .vs-text {
+                font-size: 18px;
+                padding-top: 30px;
+            }
+            .player-section h2 {
+                font-size: 14px;
+            }
+            #single-mode .tetris-board {
+                width: 150px;
+                height: 300px;
+            }
+            #single-mode .next-piece {
+                width: 60px;
+                height: 60px;
+            }
         }
     </style>
 </head>
