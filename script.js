@@ -65,6 +65,8 @@ let gameOver = false;
 let gamePaused = false;
 let dropInterval = 1000;
 let dropTimer = null;
+let autoPlay = false;
+let autoPlayTimer = null;
 
 // DOM 元素
 const boardElement = document.getElementById('tetris-board');
@@ -74,6 +76,7 @@ const levelElement = document.getElementById('level');
 const startButton = document.getElementById('start-button');
 const pauseButton = document.getElementById('pause-button');
 const resetButton = document.getElementById('reset-button');
+const autoButton = document.getElementById('auto-button');
 
 // 初始化游戏
 function initGame() {
@@ -142,9 +145,12 @@ function resetGame() {
     drawNextPiece();
     
     if (dropTimer) clearInterval(dropTimer);
+    if (autoPlayTimer) clearInterval(autoPlayTimer);
+    autoPlay = false;
     
     startButton.disabled = false;
     pauseButton.disabled = true;
+    autoButton.disabled = true;
     resetButton.disabled = false;
 }
 
@@ -309,8 +315,11 @@ function lockPiece() {
     if (checkCollision(currentPiece, currentPosition)) {
         gameOver = true;
         clearInterval(dropTimer);
+        clearInterval(autoPlayTimer);
+        autoPlay = false;
         startButton.disabled = false;
         pauseButton.disabled = true;
+        autoButton.disabled = true;
         alert('游戏结束!');
     }
     
@@ -405,6 +414,7 @@ function setupEventListeners() {
     
     // 按钮控制
     startButton.addEventListener('click', startGame);
+    autoButton.addEventListener('click', toggleAutoPlay);
     pauseButton.addEventListener('click', togglePause);
     resetButton.addEventListener('click', resetGame);
 }
@@ -428,11 +438,187 @@ function togglePause() {
     gamePaused = !gamePaused;
     if (gamePaused) {
         clearInterval(dropTimer);
+        clearInterval(autoPlayTimer);
         pauseButton.textContent = '继续';
     } else {
         dropTimer = setInterval(dropPiece, dropInterval);
+        if (autoPlay) {
+            startAutoPlay();
+        }
         pauseButton.textContent = '暂停';
     }
+}
+
+// 自动游戏
+function toggleAutoPlay() {
+    if (gameOver) return;
+    
+    autoPlay = !autoPlay;
+    
+    if (autoPlay) {
+        if (gamePaused) {
+            gamePaused = false;
+            pauseButton.textContent = '暂停';
+        }
+        
+        startButton.disabled = true;
+        autoButton.textContent = '停止自动';
+        
+        if (dropTimer) clearInterval(dropTimer);
+        dropTimer = setInterval(dropPiece, dropInterval);
+        
+        startAutoPlay();
+    } else {
+        startButton.disabled = false;
+        autoButton.textContent = '自动游戏';
+        clearInterval(autoPlayTimer);
+    }
+}
+
+// 自动移动逻辑
+function startAutoPlay() {
+    if (autoPlayTimer) clearInterval(autoPlayTimer);
+    
+    autoPlayTimer = setInterval(() => {
+        if (gameOver || gamePaused || !autoPlay) return;
+        
+        const bestMove = findBestMove();
+        
+        if (bestMove.rotations > 0) {
+            for (let i = 0; i < bestMove.rotations; i++) {
+                rotateCurrentPiece();
+            }
+        }
+        
+        const targetX = bestMove.x - currentPosition.x;
+        if (targetX > 0) {
+            for (let i = 0; i < targetX; i++) {
+                movePiece(1, 0);
+            }
+        } else if (targetX < 0) {
+            for (let i = 0; i < Math.abs(targetX); i++) {
+                movePiece(-1, 0);
+            }
+        }
+        
+    }, 100);
+}
+
+// 旋转当前方块
+function rotateCurrentPiece() {
+    const rotatedPiece = rotatePiece(currentPiece);
+    if (!checkCollision(rotatedPiece, currentPosition)) {
+        currentPiece = rotatedPiece;
+        drawBoard();
+    }
+}
+
+// 找到最佳移动位置
+function findBestMove() {
+    let bestScore = -Infinity;
+    let bestMove = { x: currentPosition.x, rotations: 0 };
+    
+    const piece = currentPiece;
+    
+    for (let rotations = 0; rotations < 4; rotations++) {
+        const rotatedPiece = { ...piece, shape: getRotatedShape(piece.shape, rotations) };
+        
+        for (let x = -2; x < COLS + 2; x++) {
+            const position = { x: x, y: currentPosition.y };
+            
+            if (!checkCollision(rotatedPiece, position)) {
+                const landingY = getLandingPosition(rotatedPiece, position);
+                const score = evaluatePosition(rotatedPiece, { x: x, y: landingY });
+                
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMove = { x: x, rotations: rotations };
+                }
+            }
+        }
+    }
+    
+    return bestMove;
+}
+
+// 获取旋转后的形状
+function getRotatedShape(shape, times) {
+    let result = shape;
+    for (let i = 0; i < times; i++) {
+        result = result[0].map((_, index) => 
+            result.map(row => row[index]).reverse()
+        );
+    }
+    return result;
+}
+
+// 获取方块落地位置
+function getLandingPosition(piece, position) {
+    let y = position.y;
+    while (!checkCollision(piece, { x: position.x, y: y + 1 })) {
+        y++;
+    }
+    return y;
+}
+
+// 评估位置分数
+function evaluatePosition(piece, position) {
+    let score = 0;
+    
+    // 消除行数评估
+    const testBoard = board.map(row => [...row]);
+    for (let y = 0; y < piece.shape.length; y++) {
+        for (let x = 0; x < piece.shape[y].length; x++) {
+            if (piece.shape[y][x]) {
+                const boardX = position.x + x;
+                const boardY = position.y + y;
+                if (boardY >= 0 && boardY < ROWS && boardX >= 0 && boardX < COLS) {
+                    testBoard[boardY][boardX] = piece.color;
+                }
+            }
+        }
+    }
+    
+    let linesCleared = 0;
+    for (let y = ROWS - 1; y >= 0; y--) {
+        if (testBoard[y].every(cell => cell !== 0)) {
+            linesCleared++;
+        }
+    }
+    score += linesCleared * 1000;
+    
+    // 惩罚堆叠高度
+    let maxHeight = 0;
+    for (let x = 0; x < COLS; x++) {
+        for (let y = 0; y < ROWS; y++) {
+            if (testBoard[y][x]) {
+                maxHeight = Math.max(maxHeight, ROWS - y);
+                break;
+            }
+        }
+    }
+    score -= maxHeight * 10;
+    
+    // 惩罚空洞
+    let holes = 0;
+    for (let x = 0; x < COLS; x++) {
+        let foundBlock = false;
+        for (let y = 0; y < ROWS; y++) {
+            if (testBoard[y][x]) {
+                foundBlock = true;
+            } else if (foundBlock && !testBoard[y][x]) {
+                holes++;
+            }
+        }
+    }
+    score -= holes * 50;
+    
+    // 奖励中心对齐
+    const pieceCenterX = position.x + piece.shape[0].length / 2;
+    const boardCenterX = COLS / 2;
+    score -= Math.abs(pieceCenterX - boardCenterX) * 2;
+    
+    return score;
 }
 
 // 确保DOM加载完成后再初始化游戏
