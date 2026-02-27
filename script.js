@@ -401,5 +401,13 @@ function togglePause() {
     }
 }
 
-// 初始化游戏
-initGame();
+// 确保DOM加载完成后再初始化游戏
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        initGame();
+        console.log('游戏初始化成功');
+    } catch (error) {
+        console.error('游戏初始化失败:', error);
+        alert('游戏加载失败，请刷新页面重试');
+    }
+});

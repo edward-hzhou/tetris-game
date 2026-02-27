@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>俄罗斯方块</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* 确保页面内容可见 */
+        body {
+            display: block;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .tetris-container {
+            margin: 0 auto;
+        }
+    </style>
 </head>
 <body>
     <div class="tetris-container">
@@ -33,6 +44,16 @@
             </ul>
         </div>
     </div>
+    <script>
+        // 添加错误处理
+        window.onerror = function(message, source, lineno, colno, error) {
+            console.error('Error:', message);
+            console.error('Source:', source);
+            console.error('Line:', lineno);
+            console.error('Column:', colno);
+            console.error('Error object:', error);
+        };
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
