@@ -265,17 +265,19 @@
             position: relative;
         }
         
+        .next-piece-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
         .next-piece-label {
-            position: absolute;
-            top: -24px;
-            left: 50%;
-            transform: translateX(-50%);
             font-size: 11px;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.5);
             text-transform: uppercase;
             letter-spacing: 1px;
-            white-space: nowrap;
         }
         
         /* 控制按钮 - Apple风格 */
@@ -452,6 +454,14 @@
             color: #f43f5e;
         }
         
+        .player-section.player1 h2 {
+            color: #10b981;
+        }
+        
+        .player-section.player2 h2 {
+            color: #3b82f6;
+        }
+        
         .player-section .game-info {
             gap: 16px;
             margin-bottom: 12px;
@@ -611,6 +621,7 @@
         <div class="mode-select">
             <button id="single-btn" class="active">单人模式</button>
             <button id="battle-btn">对战模式</button>
+            <button id="pvp-btn">双人对战</button>
         </div>
         
         <div id="single-mode">
@@ -623,14 +634,19 @@
                     <div class="label">等级</div>
                     <div class="value" id="level">1</div>
                 </div>
+                <div class="info-card">
+                    <div class="label">行数</div>
+                    <div class="value" id="lines">0</div>
+                </div>
             </div>
             
             <div class="game-area">
                 <div class="game-board-wrapper">
                     <div class="tetris-board" id="tetris-board"></div>
                 </div>
-                <div class="next-piece" id="next-piece">
-                    <span class="next-piece-label">下一个</span>
+                <div class="next-piece-wrapper">
+                    <div class="next-piece-label">下一个</div>
+                    <div class="next-piece" id="next-piece"></div>
                 </div>
             </div>
         </div>
@@ -648,10 +664,15 @@
                             <div class="label">等级</div>
                             <div class="value" id="player-level">1</div>
                         </div>
+                        <div class="info-card">
+                            <div class="label">行数</div>
+                            <div class="value" id="player-lines">0</div>
+                        </div>
                     </div>
                     <div class="tetris-board" id="player-board"></div>
-                    <div class="next-piece" id="player-next">
-                        <span class="next-piece-label">NEXT</span>
+                    <div class="next-piece-wrapper">
+                        <div class="next-piece-label">NEXT</div>
+                        <div class="next-piece" id="player-next"></div>
                     </div>
                 </div>
                 
@@ -668,10 +689,67 @@
                             <div class="label">等级</div>
                             <div class="value" id="ai-level">1</div>
                         </div>
+                        <div class="info-card">
+                            <div class="label">行数</div>
+                            <div class="value" id="ai-lines">0</div>
+                        </div>
                     </div>
                     <div class="tetris-board" id="ai-board"></div>
-                    <div class="next-piece" id="ai-next">
-                        <span class="next-piece-label">NEXT</span>
+                    <div class="next-piece-wrapper">
+                        <div class="next-piece-label">NEXT</div>
+                        <div class="next-piece" id="ai-next"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="pvp-mode" class="hidden">
+            <div class="battle-area">
+                <div class="player-section player1">
+                    <h2>👤 玩家1</h2>
+                    <div class="game-info">
+                        <div class="info-card">
+                            <div class="label">分数</div>
+                            <div class="value" id="p1-score">0</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="label">等级</div>
+                            <div class="value" id="p1-level">1</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="label">行数</div>
+                            <div class="value" id="p1-lines">0</div>
+                        </div>
+                    </div>
+                    <div class="tetris-board" id="p1-board"></div>
+                    <div class="next-piece-wrapper">
+                        <div class="next-piece-label">NEXT</div>
+                        <div class="next-piece" id="p1-next"></div>
+                    </div>
+                </div>
+                
+                <div class="vs-badge">VS</div>
+                
+                <div class="player-section player2">
+                    <h2>👤 玩家2</h2>
+                    <div class="game-info">
+                        <div class="info-card">
+                            <div class="label">分数</div>
+                            <div class="value" id="p2-score">0</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="label">等级</div>
+                            <div class="value" id="p2-level">1</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="label">行数</div>
+                            <div class="value" id="p2-lines">0</div>
+                        </div>
+                    </div>
+                    <div class="tetris-board" id="p2-board"></div>
+                    <div class="next-piece-wrapper">
+                        <div class="next-piece-label">NEXT</div>
+                        <div class="next-piece" id="p2-next"></div>
                     </div>
                 </div>
             </div>

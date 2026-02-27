@@ -77,11 +77,12 @@ let aiGame = null;
 
 // 游戏类
 class TetrisGame {
-    constructor(boardId, nextPieceId, scoreId, levelId, isAI = false) {
+    constructor(boardId, nextPieceId, scoreId, levelId, isAI = false, linesId = null) {
         this.boardElement = document.getElementById(boardId);
         this.nextPieceElement = document.getElementById(nextPieceId);
         this.scoreElement = document.getElementById(scoreId);
         this.levelElement = document.getElementById(levelId);
+        this.linesElement = linesId ? document.getElementById(linesId) : null;
         this.isAI = isAI;
         
         this.board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
@@ -340,6 +341,7 @@ class TetrisGame {
             }
             
             this.updateScore();
+            this.updateLines();
         }
     }
     
@@ -352,6 +354,12 @@ class TetrisGame {
     updateLevel() {
         if (this.levelElement) {
             this.levelElement.textContent = this.level;
+        }
+    }
+    
+    updateLines() {
+        if (this.linesElement) {
+            this.linesElement.textContent = this.linesCleared;
         }
     }
     
@@ -519,8 +527,14 @@ const resetButton = document.getElementById('reset-button');
 const autoButton = document.getElementById('auto-button');
 const singleBtn = document.getElementById('single-btn');
 const battleBtn = document.getElementById('battle-btn');
+const pvpBtn = document.getElementById('pvp-btn');
 const singleMode = document.getElementById('single-mode');
 const battleMode = document.getElementById('battle-mode');
+const pvpMode = document.getElementById('pvp-mode');
+
+// 对战游戏状态
+let player1Game = null;
+let player2Game = null;
 
 // 初始化游戏
 function initGame() {
@@ -797,7 +811,7 @@ function checkLines() {
             updateLevel();
         }
         
-        updateScore();
+        updateLines();
     }
 }
 
@@ -824,14 +838,24 @@ function updateLevel() {
     levelElement.textContent = level;
 }
 
+// 更新行数
+function updateLines() {
+    const linesElement = document.getElementById('lines');
+    if (linesElement) {
+        linesElement.textContent = linesCleared;
+    }
+}
+
 // 设置模式选择
 function setupModeSelect() {
     singleBtn.addEventListener('click', () => {
         gameMode = 'single';
         singleBtn.classList.add('active');
         battleBtn.classList.remove('active');
+        pvpBtn.classList.remove('active');
         singleMode.classList.remove('hidden');
         battleMode.classList.add('hidden');
+        pvpMode.classList.add('hidden');
         resetGame();
     });
     
@@ -839,19 +863,41 @@ function setupModeSelect() {
         gameMode = 'battle';
         battleBtn.classList.add('active');
         singleBtn.classList.remove('active');
+        pvpBtn.classList.remove('active');
         singleMode.classList.add('hidden');
         battleMode.classList.remove('hidden');
+        pvpMode.classList.add('hidden');
         initBattleGame();
+    });
+    
+    pvpBtn.addEventListener('click', () => {
+        gameMode = 'pvp';
+        pvpBtn.classList.add('active');
+        singleBtn.classList.remove('active');
+        battleBtn.classList.remove('active');
+        singleMode.classList.add('hidden');
+        battleMode.classList.add('hidden');
+        pvpMode.classList.remove('hidden');
+        initPvpGame();
     });
 }
 
 // 初始化对战游戏
 function initBattleGame() {
-    playerGame = new TetrisGame('player-board', 'player-next', 'player-score', 'player-level', false);
-    aiGame = new TetrisGame('ai-board', 'ai-next', 'ai-score', 'ai-level', true);
+    playerGame = new TetrisGame('player-board', 'player-next', 'player-score', 'player-level', false, 'player-lines');
+    aiGame = new TetrisGame('ai-board', 'ai-next', 'ai-score', 'ai-level', true, 'ai-lines');
     
     playerGame.reset();
     aiGame.reset();
+}
+
+// 初始化双人对战游戏
+function initPvpGame() {
+    player1Game = new TetrisGame('p1-board', 'p1-next', 'p1-score', 'p1-level', false, 'p1-lines');
+    player2Game = new TetrisGame('p2-board', 'p2-next', 'p2-score', 'p2-level', false, 'p2-lines');
+    
+    player1Game.reset();
+    player2Game.reset();
 }
 
 // 检查对战结束
@@ -863,6 +909,14 @@ function checkBattleEnd() {
             alert('玩家获胜！');
         }
     }
+    
+    if (player1Game && player2Game) {
+        if (player1Game.gameOver) {
+            alert('玩家2获胜！');
+        } else if (player2Game.gameOver) {
+            alert('玩家1获胜！');
+        }
+    }
 }
 
 // 设置事件监听器
@@ -870,6 +924,8 @@ function setupEventListeners() {
     document.addEventListener('keydown', (e) => {
         if (gameMode === 'battle') {
             handleBattleControls(e);
+        } else if (gameMode === 'pvp') {
+            handlePvpControls(e);
         } else {
             handleSingleControls(e);
         }
@@ -936,10 +992,56 @@ function handleBattleControls(e) {
     }
 }
 
+// 双人对战模式控制
+// 玩家1: WASD + Q旋转, 玩家2: 方向键 + 空格旋转
+function handlePvpControls(e) {
+    if (!player1Game || !player2Game || gamePaused) return;
+    
+    // 玩家1: WASD控制, Q旋转
+    if (e.key === 'a' || e.key === 'A') {
+        e.preventDefault();
+        player1Game.movePiece(-1, 0);
+    } else if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        player1Game.movePiece(1, 0);
+    } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        player1Game.movePiece(0, 1);
+    } else if (e.key === 'q' || e.key === 'Q') {
+        e.preventDefault();
+        const rotated1 = player1Game.rotatePiece(player1Game.currentPiece);
+        if (!player1Game.checkCollision(rotated1, player1Game.currentPosition)) {
+            player1Game.currentPiece = rotated1;
+            player1Game.drawBoard();
+        }
+    }
+    
+    // 玩家2: 方向键控制, 空格旋转
+    if (e.key === 'ArrowLeft' && !e.ctrlKey) {
+        e.preventDefault();
+        player2Game.movePiece(-1, 0);
+    } else if (e.key === 'ArrowRight' && !e.ctrlKey) {
+        e.preventDefault();
+        player2Game.movePiece(1, 0);
+    } else if (e.key === 'ArrowDown' && !e.ctrlKey) {
+        e.preventDefault();
+        player2Game.movePiece(0, 1);
+    } else if (e.key === ' ') {
+        e.preventDefault();
+        const rotated2 = player2Game.rotatePiece(player2Game.currentPiece);
+        if (!player2Game.checkCollision(rotated2, player2Game.currentPosition)) {
+            player2Game.currentPiece = rotated2;
+            player2Game.drawBoard();
+        }
+    }
+}
+
 // 开始游戏
 function startGame() {
     if (gameMode === 'battle') {
         startBattleGame();
+    } else if (gameMode === 'pvp') {
+        startPvpGame();
     } else {
         startSingleGame();
     }
@@ -973,6 +1075,21 @@ function startBattleGame() {
     
     playerGame.start();
     aiGame.start();
+}
+
+// 开始双人对战游戏
+function startPvpGame() {
+    if (!player1Game || !player2Game) {
+        initPvpGame();
+    }
+    
+    gamePaused = false;
+    startButton.disabled = true;
+    pauseButton.disabled = false;
+    autoButton.disabled = true;
+    
+    player1Game.start();
+    player2Game.start();
 }
 
 // 暂停/继续游戏
