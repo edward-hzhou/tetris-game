@@ -428,6 +428,7 @@ function startGame() {
     gamePaused = false;
     startButton.disabled = true;
     pauseButton.disabled = false;
+    autoButton.disabled = false;
     
     if (dropTimer) clearInterval(dropTimer);
     dropTimer = setInterval(dropPiece, dropInterval);
