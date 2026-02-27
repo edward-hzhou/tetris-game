@@ -3,183 +3,602 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>俄罗斯方块对战版</title>
+    <title>俄罗斯方块 - 最强大脑版</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', Arial, sans-serif;
+        }
+        
         body {
-            display: block;
+            margin: 0;
+            padding: 0;
             min-height: 100vh;
-            padding: 10px;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: 
+                radial-gradient(ellipse at 20% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.1) 0%, transparent 70%),
+                linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            overflow-x: hidden;
         }
+        
+        /* 动态背景粒子 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.3), transparent),
+                radial-gradient(2px 2px at 130px 80px, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 160px 120px, rgba(255,255,255,0.4), transparent);
+            background-size: 200px 200px;
+            animation: twinkle 4s ease-in-out infinite alternate;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes twinkle {
+            0% { opacity: 0.3; }
+            100% { opacity: 0.8; }
+        }
+        
         .tetris-container {
-            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+                0 -1px 0 rgba(255, 255, 255, 0.1) inset;
+            padding: 32px;
             max-width: 100%;
+            animation: fadeIn 0.6s ease-out;
         }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
         .game-title {
-            font-size: 28px;
-            margin-bottom: 10px;
-            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            font-size: 42px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #fff 0%, #a5f3fc 25%, #22d3ee 50%, #a78bfa 75%, #fff 100%);
+            background-size: 200% auto;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-align: center;
+            background-clip: text;
+            animation: shine 3s linear infinite;
+            letter-spacing: -1px;
         }
+        
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 13px;
+            font-weight: 400;
+            margin-bottom: 24px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        
+        /* 模式选择按钮 - Apple风格 */
         .mode-select {
-            text-align: center;
-            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
         }
+        
         .mode-select button {
-            margin: 0 5px;
-            padding: 8px 16px;
-            font-size: 14px;
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 500;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
         }
+        
+        .mode-select button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .mode-select button:hover::before {
+            opacity: 1;
+        }
+        
+        .mode-select button:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
         .mode-select button.active {
-            background-color: #ff6b6b;
-            box-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 
+                0 4px 15px rgba(6, 182, 212, 0.4),
+                0 0 0 1px rgba(139, 92, 246, 0.3) inset;
         }
+        
+        /* 游戏信息卡片 - Apple风格 */
+        .game-info {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 24px;
+        }
+        
+        .info-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 16px 28px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            text-align: center;
+            min-width: 100px;
+            transition: all 0.3s;
+        }
+        
+        .info-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+        
+        .info-card .label {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        
+        .info-card .value {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #22d3ee 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* 游戏区域 */
+        .game-area {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .game-board-wrapper {
+            position: relative;
+        }
+        
+        /* 游戏板 - 毛玻璃边框 */
+        .tetris-board {
+            width: 280px;
+            height: 560px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 0 40px rgba(6, 182, 212, 0.1) inset,
+                0 0 80px rgba(139, 92, 246, 0.05) inset;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(20, 1fr);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .tetris-board::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 28px 28px;
+            pointer-events: none;
+        }
+        
+        /* 下一个方块预览 */
+        .next-piece {
+            width: 100px;
+            height: 100px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            padding: 12px;
+            position: relative;
+        }
+        
+        .next-piece-label {
+            position: absolute;
+            top: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+        
+        /* 控制按钮 - Apple风格 */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .controls button {
+            padding: 14px 28px;
+            font-size: 15px;
+            font-weight: 500;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .controls button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        #start-button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        #start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        }
+        
+        #auto-button {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+        
+        #auto-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+        
+        #pause-button {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+        
+        #pause-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
+        }
+        
+        #reset-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        #reset-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        /* 说明区域 */
+        .instructions {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 20px 24px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .instructions h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        
+        .instructions ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 8px;
+        }
+        
+        .instructions li {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .instructions li:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .instructions li span {
+            color: #22d3ee;
+            font-weight: 500;
+        }
+        
+        /* 对战模式样式 */
         .battle-area {
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            gap: 15px;
+            gap: 24px;
             flex-wrap: wrap;
         }
+        
         .player-section {
             display: flex;
             flex-direction: column;
             align-items: center;
+            animation: slideIn 0.5s ease-out;
         }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .player-section.ai {
+            animation-delay: 0.1s;
+        }
+        
         .player-section h2 {
-            color: #fff;
-            margin-bottom: 8px;
             font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
+        
         .player-section.player h2 {
-            color: #4ade80;
+            color: #10b981;
         }
+        
         .player-section.ai h2 {
-            color: #f87171;
+            color: #f43f5e;
         }
+        
+        .player-section .game-info {
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .player-section .info-card {
+            padding: 12px 20px;
+            min-width: 80px;
+        }
+        
+        .player-section .info-card .value {
+            font-size: 22px;
+        }
+        
         .player-section .tetris-board {
-            width: 180px;
-            height: 360px;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(20, 1fr);
+            width: 200px;
+            height: 400px;
         }
+        
         .player-section .next-piece {
             width: 80px;
             height: 80px;
         }
-        .player-section .game-info {
-            background: rgba(255,255,255,0.1);
-            padding: 8px 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            color: #fff;
-            font-size: 12px;
-        }
-        .vs-text {
+        
+        .vs-badge {
             display: flex;
             align-items: center;
-            font-size: 24px;
-            font-weight: bold;
-            color: #ff6b6b;
-            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
-            padding-top: 50px;
+            justify-content: center;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 700;
+            box-shadow: 
+                0 4px 20px rgba(244, 63, 94, 0.4),
+                0 0 40px rgba(244, 63, 94, 0.2);
+            animation: pulse 2s ease-in-out infinite;
+            margin-top: 60px;
         }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 
+                    0 4px 20px rgba(244, 63, 94, 0.4),
+                    0 0 40px rgba(244, 63, 94, 0.2);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 
+                    0 4px 30px rgba(244, 63, 94, 0.5),
+                    0 0 60px rgba(244, 63, 94, 0.3);
+            }
+        }
+        
         .hidden {
             display: none !important;
         }
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        .controls button {
-            padding: 8px 16px;
-            font-size: 14px;
-        }
-        .instructions {
-            font-size: 12px;
-            padding: 10px;
-        }
-        .instructions h3 {
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-        .instructions ul {
-            padding-left: 15px;
-        }
-        .instructions li {
-            margin-bottom: 3px;
-        }
         
-        #single-mode .game-area {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-        
-        #single-mode .tetris-board {
-            width: 250px;
-            height: 500px;
-            border: 2px solid #333;
-            background-color: #000;
-            display: grid;
-            grid-template-columns: repeat(10, 1fr);
-            grid-template-rows: repeat(20, 1fr);
-        }
-        
-        #single-mode .next-piece {
-            width: 100px;
-            height: 100px;
-            border: 2px solid #333;
-            background-color: #000;
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            grid-template-rows: repeat(4, 1fr);
-        }
-        
-        @media (max-width: 600px) {
-            #single-mode .tetris-board {
-                width: 180px;
-                height: 360px;
+        /* 响应式设计 */
+        @media (max-width: 700px) {
+            .tetris-container {
+                padding: 20px;
+                border-radius: 20px;
             }
-            #single-mode .next-piece {
-                width: 70px;
-                height: 70px;
+            
+            .game-title {
+                font-size: 28px;
+            }
+            
+            .subtitle {
+                font-size: 11px;
+            }
+            
+            .mode-select button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+            
+            .info-card {
+                padding: 12px 20px;
+            }
+            
+            .info-card .value {
+                font-size: 24px;
+            }
+            
+            .tetris-board {
+                width: 220px;
+                height: 440px;
+            }
+            
+            .player-section .tetris-board {
+                width: 160px;
+                height: 320px;
+            }
+            
+            .vs-badge {
+                width: 40px;
+                height: 40px;
+                font-size: 14px;
+                margin-top: 40px;
             }
         }
         
         @media (max-width: 500px) {
+            body {
+                padding: 10px;
+            }
+            
+            .tetris-container {
+                padding: 16px;
+            }
+            
             .game-title {
-                font-size: 22px;
+                font-size: 24px;
             }
-            .player-section .tetris-board {
-                width: 150px;
-                height: 300px;
+            
+            .game-info {
+                gap: 16px;
             }
-            .player-section .next-piece {
-                width: 60px;
-                height: 60px;
+            
+            .info-card {
+                padding: 10px 16px;
+                min-width: 70px;
             }
-            .vs-text {
-                font-size: 18px;
-                padding-top: 30px;
+            
+            .tetris-board {
+                width: 180px;
+                height: 360px;
             }
-            .player-section h2 {
+            
+            .next-piece {
+                width: 70px;
+                height: 70px;
+            }
+            
+            .controls button {
+                padding: 12px 20px;
                 font-size: 14px;
             }
-            #single-mode .tetris-board {
-                width: 150px;
-                height: 300px;
-            }
-            #single-mode .next-piece {
-                width: 60px;
-                height: 60px;
+            
+            .player-section .tetris-board {
+                width: 140px;
+                height: 280px;
             }
         }
     </style>
@@ -187,20 +606,32 @@
 <body>
     <div class="tetris-container">
         <h1 class="game-title">俄罗斯方块</h1>
+        <p class="subtitle">最强大脑 · AI对战版</p>
         
-        <div class="mode-select" id="mode-select">
+        <div class="mode-select">
             <button id="single-btn" class="active">单人模式</button>
             <button id="battle-btn">对战模式</button>
         </div>
         
         <div id="single-mode">
-            <div class="game-info" style="text-align: center; color: #333; margin-bottom: 20px;">
-                <div class="score" style="display: inline-block; margin: 0 20px;">分数: <span id="score">0</span></div>
-                <div class="level" style="display: inline-block; margin: 0 20px;">级别: <span id="level">1</span></div>
+            <div class="game-info">
+                <div class="info-card">
+                    <div class="label">分数</div>
+                    <div class="value" id="score">0</div>
+                </div>
+                <div class="info-card">
+                    <div class="label">等级</div>
+                    <div class="value" id="level">1</div>
+                </div>
             </div>
-            <div class="game-area" style="display: flex; justify-content: center;">
-                <div class="tetris-board" id="tetris-board"></div>
-                <div class="next-piece" id="next-piece">下一个:</div>
+            
+            <div class="game-area">
+                <div class="game-board-wrapper">
+                    <div class="tetris-board" id="tetris-board"></div>
+                </div>
+                <div class="next-piece" id="next-piece">
+                    <span class="next-piece-label">下一个</span>
+                </div>
             </div>
         </div>
         
@@ -209,28 +640,44 @@
                 <div class="player-section player">
                     <h2>👤 玩家</h2>
                     <div class="game-info">
-                        <div>分数: <span id="player-score">0</span></div>
-                        <div>等级: <span id="player-level">1</span></div>
+                        <div class="info-card">
+                            <div class="label">分数</div>
+                            <div class="value" id="player-score">0</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="label">等级</div>
+                            <div class="value" id="player-level">1</div>
+                        </div>
                     </div>
                     <div class="tetris-board" id="player-board"></div>
-                    <div class="next-piece" id="player-next">下一个:</div>
+                    <div class="next-piece" id="player-next">
+                        <span class="next-piece-label">NEXT</span>
+                    </div>
                 </div>
                 
-                <div class="vs-text">VS</div>
+                <div class="vs-badge">VS</div>
                 
                 <div class="player-section ai">
                     <h2>🤖 AI</h2>
                     <div class="game-info">
-                        <div>分数: <span id="ai-score">0</span></div>
-                        <div>等级: <span id="ai-level">1</span></div>
+                        <div class="info-card">
+                            <div class="label">分数</div>
+                            <div class="value" id="ai-score">0</div>
+                        </div>
+                        <div class="info-card">
+                            <div class="label">等级</div>
+                            <div class="value" id="ai-level">1</div>
+                        </div>
                     </div>
                     <div class="tetris-board" id="ai-board"></div>
-                    <div class="next-piece" id="ai-next">下一个:</div>
+                    <div class="next-piece" id="ai-next">
+                        <span class="next-piece-label">NEXT</span>
+                    </div>
                 </div>
             </div>
         </div>
         
-        <div class="controls" id="game-controls">
+        <div class="controls">
             <button id="start-button">开始游戏</button>
             <button id="auto-button">自动游戏</button>
             <button id="pause-button">暂停</button>
@@ -238,13 +685,12 @@
         </div>
         
         <div class="instructions">
-            <h3>操作说明:</h3>
+            <h3>操作说明</h3>
             <ul>
-                <li>方向键左: 向左移动</li>
-                <li>方向键右: 向右移动</li>
-                <li>方向键下: 加速下落</li>
-                <li>方向键上: 旋转方块</li>
-                <li>空格键: 快速下落</li>
+                <li><span>← →</span> 左右移动</li>
+                <li><span>↓</span> 加速下落</li>
+                <li><span>↑</span> 旋转方块</li>
+                <li><span>空格</span> 快速落地</li>
             </ul>
         </div>
     </div>
