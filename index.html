@@ -269,15 +269,18 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            justify-content: flex-start;
+            gap: 6px;
+            min-width: 80px;
         }
         
         .next-piece-label {
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             color: rgba(255, 255, 255, 0.5);
             text-transform: uppercase;
             letter-spacing: 1px;
+            white-space: nowrap;
         }
         
         /* 控制按钮 - Apple风格 */
@@ -762,9 +765,9 @@
             <button id="reset-button">重置</button>
         </div>
         
-        <div class="instructions">
+        <div class="instructions" id="instructions">
             <h3>操作说明</h3>
-            <ul>
+            <ul id="instructions-list">
                 <li><span>← →</span> 左右移动</li>
                 <li><span>↓</span> 加速下落</li>
                 <li><span>↑</span> 旋转方块</li>

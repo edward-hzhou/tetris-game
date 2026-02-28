@@ -543,6 +543,7 @@ function initGame() {
     resetGame();
     setupEventListeners();
     setupModeSelect();
+    updateInstructions();
 }
 
 // 创建游戏板
@@ -846,6 +847,37 @@ function updateLines() {
     }
 }
 
+// 更新操作说明
+function updateInstructions() {
+    const instructionsList = document.getElementById('instructions-list');
+    if (!instructionsList) return;
+    
+    if (gameMode === 'pvp') {
+        instructionsList.innerHTML = `
+            <li><span>A D</span> 玩家1左右移动</li>
+            <li><span>S</span> 玩家1下落</li>
+            <li><span>Q</span> 玩家1旋转</li>
+            <li><span>← →</span> 玩家2左右移动</li>
+            <li><span>↓</span> 玩家2下落</li>
+            <li><span>空格</span> 玩家2旋转</li>
+        `;
+    } else if (gameMode === 'battle') {
+        instructionsList.innerHTML = `
+            <li><span>← →</span> 左右移动</li>
+            <li><span>↓</span> 加速下落</li>
+            <li><span>↑</span> 旋转方块</li>
+            <li><span>空格</span> 快速落地</li>
+        `;
+    } else {
+        instructionsList.innerHTML = `
+            <li><span>← →</span> 左右移动</li>
+            <li><span>↓</span> 加速下落</li>
+            <li><span>↑</span> 旋转方块</li>
+            <li><span>空格</span> 快速落地</li>
+        `;
+    }
+}
+
 // 设置模式选择
 function setupModeSelect() {
     singleBtn.addEventListener('click', () => {
@@ -857,6 +889,7 @@ function setupModeSelect() {
         battleMode.classList.add('hidden');
         pvpMode.classList.add('hidden');
         resetGame();
+        updateInstructions();
     });
     
     battleBtn.addEventListener('click', () => {
@@ -868,6 +901,7 @@ function setupModeSelect() {
         battleMode.classList.remove('hidden');
         pvpMode.classList.add('hidden');
         initBattleGame();
+        updateInstructions();
     });
     
     pvpBtn.addEventListener('click', () => {
@@ -879,6 +913,7 @@ function setupModeSelect() {
         battleMode.classList.add('hidden');
         pvpMode.classList.remove('hidden');
         initPvpGame();
+        updateInstructions();
     });
 }
 
