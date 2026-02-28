@@ -857,9 +857,11 @@ function updateInstructions() {
             <li><span>A D</span> 玩家1左右移动</li>
             <li><span>S</span> 玩家1下落</li>
             <li><span>Q</span> 玩家1旋转</li>
+            <li><span>W</span> 玩家1快速落地</li>
             <li><span>← →</span> 玩家2左右移动</li>
             <li><span>↓</span> 玩家2下落</li>
-            <li><span>空格</span> 玩家2旋转</li>
+            <li><span>↑</span> 玩家2旋转</li>
+            <li><span>空格</span> 玩家2快速落地</li>
         `;
     } else if (gameMode === 'battle') {
         instructionsList.innerHTML = `
@@ -1028,11 +1030,12 @@ function handleBattleControls(e) {
 }
 
 // 双人对战模式控制
-// 玩家1: WASD + Q旋转, 玩家2: 方向键 + 空格旋转
+// 玩家1: WASD移动, Q旋转, W快速下落
+// 玩家2: 方向键移动, ↑旋转, 空格快速下落
 function handlePvpControls(e) {
     if (!player1Game || !player2Game || gamePaused) return;
     
-    // 玩家1: WASD控制, Q旋转
+    // 玩家1: WASD控制, Q旋转, W快速下落
     if (e.key === 'a' || e.key === 'A') {
         e.preventDefault();
         player1Game.movePiece(-1, 0);
@@ -1049,25 +1052,33 @@ function handlePvpControls(e) {
             player1Game.currentPiece = rotated1;
             player1Game.drawBoard();
         }
+    } else if (e.key === 'w' || e.key === 'W') {
+        e.preventDefault();
+        while (player1Game.movePiece(0, 1));
+        player1Game.lockPiece();
     }
     
-    // 玩家2: 方向键控制, 空格旋转
-    if (e.key === 'ArrowLeft' && !e.ctrlKey) {
+    // 玩家2: 方向键控制, ↑旋转, 空格快速下落
+    if (e.key === 'ArrowLeft') {
         e.preventDefault();
         player2Game.movePiece(-1, 0);
-    } else if (e.key === 'ArrowRight' && !e.ctrlKey) {
+    } else if (e.key === 'ArrowRight') {
         e.preventDefault();
         player2Game.movePiece(1, 0);
-    } else if (e.key === 'ArrowDown' && !e.ctrlKey) {
+    } else if (e.key === 'ArrowDown') {
         e.preventDefault();
         player2Game.movePiece(0, 1);
-    } else if (e.key === ' ') {
+    } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         const rotated2 = player2Game.rotatePiece(player2Game.currentPiece);
         if (!player2Game.checkCollision(rotated2, player2Game.currentPosition)) {
             player2Game.currentPiece = rotated2;
             player2Game.drawBoard();
         }
+    } else if (e.key === ' ') {
+        e.preventDefault();
+        while (player2Game.movePiece(0, 1));
+        player2Game.lockPiece();
     }
 }
 
